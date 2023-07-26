@@ -19,6 +19,7 @@
 
 extern unsigned int _tdata_start[];
 extern unsigned int _tdata_end[];
+extern unsigned int _tbss_start[];
 extern unsigned int _tbss_end[];
 
 long sel4_vsyscall(long sysnum, ...);
@@ -37,7 +38,14 @@ void __sel4_start_root(seL4_BootInfo *boot_info)
 {
     sel4runtime_uintptr_t tdata_start = (sel4runtime_uintptr_t) &_tdata_start[0];
     sel4runtime_uintptr_t tdata_end = (sel4runtime_uintptr_t) &_tdata_end[0];
+    sel4runtime_uintptr_t tbss_start = (sel4runtime_uintptr_t) &_tbss_start[0];
     sel4runtime_uintptr_t tbss_end = (sel4runtime_uintptr_t) &_tbss_end[0];
+
+    /* The .tdata section is empty and hence, the linker script variables are zero */
+    if (tdata_start == 0) {
+      tdata_start = tbss_start;
+      tdata_end = tbss_start;
+    }
 
     Elf_Phdr tls_header = {
         .p_type   = PT_TLS,
